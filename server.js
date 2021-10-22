@@ -17,14 +17,15 @@ app.oauth = new oAuth2Server({  //TODO: Add oauth configurations to config.json
     refreshTokenLifetime: 600
 })
 
-const authController = require('./controllers/authController');
-const authRoutes = require('./routes/authRoutes')(express.Router(), app);
-const restrictedController = require('./controllers/restrictedController');
-const restrictedRoutes = require('./routes/restrictedRoutes')(express.Router(), app);
-const internalController = require('./controllers/internalController');
-const internalRoutes = require('./routes/internalRoutes')(express.Router(), app);
-const undefinedRoutes = require('./routes/undefinedRoutes');
 const rootDirectoryPath = require('./utils/path');
+
+const authRoutes = require('./routes/auth')(express.Router(), app);
+const oauth2Routes = require('./routes/oauth2')(express.Router(), app);
+const profileRoutes = require('./routes/profile')(express.Router(), app);
+const fcmRoutes = require('./routes/fcm')(express.Router(), app);
+const oauth2RestrictedRoutes = require('./routes/oauth2Restricted')(express.Router(), app);
+const internalRoutes = require('./routes/internal')(express.Router(), app);
+const undefinedRoutes = require('./routes/undefined');
 // const restrictedAreaRoutes = require('./routes/restrictedAreaRoutes')(express.Router(), app, restrictedAreaController);
 const {createMySqlPool} = require('./database/mysql')
 const {initializeFCMConnection} = require('./controllers/fcm')
@@ -68,8 +69,11 @@ app.use(cors())
 // app.get('/', (req, res) => res.send(JSON.stringify('Indhi REST API Server')))
 
 app.use('/auth', authRoutes);
-app.use('/restricted',restrictedRoutes);
-app.use('/internal',internalRoutes);
+app.use('/auth', oauth2Routes);
+app.use('/restricted', profileRoutes);
+app.use('/restricted', fcmRoutes);
+app.use('/restricted', oauth2RestrictedRoutes);
+app.use('/internal', internalRoutes);
 
 app.use(undefinedRoutes);
 app.use(handlingErrors);

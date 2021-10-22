@@ -16,7 +16,7 @@
  * TODO: Add a cron job that deletes all the invalidated or used up otps from DB if they are not required for analytics purpose
  * IMPORTANT - 
 **/
-
+const bcrypt = requie('bcrypt');
 const cn = require('../utils/common');
 
 //Models
@@ -40,11 +40,14 @@ exports.userRegistrationDetails = (req, res, next) => {
  * 3) Does Email already exist(DB action - User model needed)
 **/
     let temporaryUserId;   
-    const temporaryUser = new TemporaryUser(req.body.firstName, req.body.lastName, req.body.email.toLowerCase(), req.body.password, req.body.countryCode, req.body.phoneNumber, req.body.client_id);
-    Promise.all([
-        emailService.sendOTP(req.body.email.toLowerCase()),
-        temporaryUser.save()
-    ])
+    bcrypt.hash(req.body.password, saltRounds)
+    .then(hashedPassword => {
+        const temporaryUser = new TemporaryUser(req.body.firstName, req.body.lastName, req.body.email.toLowerCase(), hashedPassword, req.body.countryCode, req.body.phoneNumber, req.body.client_id);
+        return Promise.all([
+            emailService.sendOTP(req.body.email.toLowerCase()),
+            temporaryUser.save()
+        ])
+    })
     .then(results => {
         temporaryUserId = results[1].userId;
         const emailOTP = new EmailOtp(req.userId,results[0].eOTP,'login',req.body.service,1);
@@ -324,8 +327,21 @@ exports.setNewPassword = (req, res, next) => {
  * @Validations
  * 1) Is the client valid -> req.body.client_id
  * 2) Set password form validation
- * 3) Does recovery token exist, if exists set req.token = recoveryToken, req.userId = userId in the token
+ * 3) Does recovery token exist, if exists set req.tokenId = <Recovery Token's Id>, req.userId = userId in the token
 **/
-    // RecoveryToken.findByToken(token)
-    // .then(result => )
+    RecoveryToken.findById(req.tokenId)
+    .then(result => {
+        if(!result.expired) cn.sendResponse(res,null,"Recovery token expired", 410, "gone", 410);
+        else return crypt.hash(myPlaintextPassword, 12);
+    })
+    .then(hashedPassword => {
+        const user = new User(req.userId, null, null, null, null, null, hashedPassword, null, null, null, null, null, null, null, Date.now());
+        return user.update();
+    })
+    .then(result => sendResponse(res,null,"Password reset successful",200,null, 200))
+    .catch(err => {
+        console.log(err);
+        if(err.message == "Database server error") cn.sendResponse(res,null,"Resend Phone OTP Failed", 503, "database_server_error", 503);
+        else cn.sendResponse(res,null,"Resend Phone OTP Failed", 500, "internal_server_error", 500);
+    })
 }

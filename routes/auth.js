@@ -1,35 +1,9 @@
-
-const oauthServer = require('oauth2-server');
-
-// const express = require('express')
-
-// const { register, login } = require('../controllers/authController')
-
-// const router = express.Router()
-
-// router.post('/registerUser', register)
-
-// router.post
-
-// module.exports = router
-const Request = oauthServer.Request;
-const Response = oauthServer.Response;
-const {oauthErrorHandler} = require('../middleware/oauthErrorHandler');
 const validationMiddleware = require('../middleware/validationMiddleware')
 
 const userController = require('../controllers/user');
 const authController = require('../controllers/auth');
 
 module.exports = (router, app) => {
-    // router.post('/registerUser', authController.register);
-    // const manageClientId = (req,res,next) => {
-    //     console.log(req)
-    //     console.log(req.headers["client_id"])
-    //     console.log(req.header("client_id"))
-    //     console.log(req.get("client_id"))
-    //     console.log(req.body)
-    //     next();
-    // }
     router.post('/userRegistrationDetails',validationMiddleware, authController.userRegistrationDetails);
     router.post('/usernameSuggestion',validationMiddleware, userController.usernameSuggestion);
     router.post('/userLoginDetails',validationMiddleware,authController.userLoginDetails);
@@ -41,9 +15,9 @@ module.exports = (router, app) => {
 
     router.post('/setNewPassword',validationMiddleware, authController.setNewPassword);
 
-    router.post('/androidVersionCheck',authController.androidVersionCheck);
+    // router.post('/androidVersionCheck',authController.androidVersionCheck);
 
-    router.post('/updationAndroidVersionCheck',authController.updationAndroidVersionCheck);
+    // router.post('/updationAndroidVersionCheck',authController.updationAndroidVersionCheck);
 
     // router.get('/deleteTestUser',userController.deleteTestUser);
 
